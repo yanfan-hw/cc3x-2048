@@ -11,7 +11,7 @@ import {
     Prefab,
     sys,
     tween,
-    Tween,
+    Tween, UIOpacity,
     v3,
     Vec3
 } from "cc";
@@ -27,6 +27,7 @@ export class GameController extends Component {
     @property(Node) tileHolder: Node = null;
     @property(Prefab) tilePrefab: Prefab = null;
     @property(ScoreManager2048) scoreManager: ScoreManager2048 = null;
+    @property(Node) layerGameOver: Node = null;
 
     private _locTouchStart = null;
     private _isEndSwipe = false;
@@ -63,6 +64,7 @@ export class GameController extends Component {
         this._gridTiles.forEach(r => r.fill(null));
         this._spawnTileNode(this._logic.addRandomTile());
         this._spawnTileNode(this._logic.addRandomTile());
+        this.layerGameOver.active = false;
     }
 
     private _initGrid() {
@@ -93,15 +95,18 @@ export class GameController extends Component {
 
         if (result.moved) {
             this._isAnimating = true;
-
             await this._playMoveAnimations(result.actions);
             this._spawnTileNode(this._logic.addRandomTile());
             this.scoreManager.updateScore(this._logic.score);
 
             if (this._logic.isGameOver()) {
-                log("GAME OVER! Score: " + this._logic.score);
+                this.layerGameOver.active = true;
+                const cmpOpa = this.layerGameOver.getComponent(UIOpacity);
+                cmpOpa.opacity = 0;
+                tween(cmpOpa)
+                    .to(0.8, {opacity: 255})
+                    .start();
             }
-
             this._isAnimating = false;
         }
     }

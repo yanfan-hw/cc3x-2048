@@ -1,7 +1,7 @@
-import {_decorator, Component, Label, Tween, tween, UIOpacity, v3} from "cc";
+import {_decorator, Component, Label, Tween, tween, UIOpacity, v3, sys} from "cc";
 
 const {ccclass, property} = _decorator;
-
+const BEST_SCORE_KEY = "_bestScore";
 @ccclass("ScoreManager2048")
 export class ScoreManager2048 extends Component {
 
@@ -17,7 +17,8 @@ export class ScoreManager2048 extends Component {
     private currentScore = 0;
 
     onLoad() {
-        this.labelScore.string = "0";
+        this.reset();
+        this.labelBest.string = this._getBestScore();
     }
 
     updateScore(score: number) {
@@ -28,14 +29,19 @@ export class ScoreManager2048 extends Component {
             this.labelScoreAddition.string = `+${diff}`;
             this._playScoreAddition();
         }
+        if(this._getBestScore() < score) {
+            this._setBestScore(score);
+            this.labelBest.string = `${score}`;
+        }
     }
 
     reset() {
-        this.labelScore.string = "0";
         this.currentScore = 0;
+        this.labelScore.string = "0";
+        this.labelBest.string = this._getBestScore();
     }
 
-    _playScoreAddition() {
+    private _playScoreAddition() {
         this.labelScoreAddition.node.active = true;
         const cmpOpa = this.labelScoreAddition.node.getComponent(UIOpacity);
         Tween.stopAllByTarget(this.labelScoreAddition.node);
@@ -49,6 +55,14 @@ export class ScoreManager2048 extends Component {
         tween(this.labelScoreAddition.node)
             .to(dur, {position: v3(0, 100, 0)}, {easing: "sineIn"})
             .start();
+    }
+
+    private _getBestScore() {
+        return sys.localStorage.getItem(BEST_SCORE_KEY) || 0;
+    }
+
+    private _setBestScore(score: number) {
+        sys.localStorage.setItem(BEST_SCORE_KEY, score);
     }
 }
 
